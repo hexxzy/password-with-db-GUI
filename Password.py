@@ -1,14 +1,38 @@
 import sqlite3
 from tkinter import *
-def UserID():
-    cursor.execute("""INSERT INTO Passwords(userid, password)VALUES(?, ?)""", (id_ent, pass_ent))
-    cursor.execute("SELECT EXISTS(SELECT * FROM Passwords WHERE userid=?)", [id_ent])
+import re
+def UserID():                                                                   #допилить кнопку выхода из меню ошибки
+    id = id_ent.get()
+    password = pass_ent.get()
+    cursor.execute("""SELECT userid FROM Passwords WHERE userid=?""", (id,))
+    result = cursor.fetchone()
+    if result:
+        error_window = Toplevel(create_window)
+        error_window.title("Ошибка")
+        error_window.geometry("250x200")
+        err_msg = Label(error_window ,text="Такой ID уже существует")
+        err_msg.place(x=20, y=50, width=200, height=25)
+        error_window["bg"] = "gray"
+        err_msg["relief"] = "raised"
+        err_msg1 = Label(error_window ,text="Пожалуйста придумайте новый")
+        err_msg1.place(x=20, y=75, width=200, height=25)
+        err_msg1["relief"] = "raised"
+    else:
+        cursor.execute("""INSERT INTO Passwords(userid, password)VALUES(?, ?)""", (id, password))
+        if len(password) < 8:
+            print("меньше 8 символов")                                              #доделать логику обработки пароля(выдавать ошибку, не записывать в бд)
+        elif re.search("[0-9]", password) is None:
+            print("нет числа")
+        elif re.search("[A-Z]", password) is None:
+            print("нет заглавной")
+
     db.commit()
 
 def Create():
+      global id_ent, pass_ent, save_msg, create_window
       create_window = Toplevel(window)
       create_window.title("Login")
-      create_window.geometry("250x200")
+      create_window.geometry("250x250")
       id_lbl = Label(create_window, text="User ID:")
       id_lbl.place(x=25, y=25, width=75, height=25)
       id_lbl["relief"] = "raised"
@@ -30,7 +54,7 @@ with sqlite3.connect("passwords.db") as db:
     cursor = db.cursor()
 cursor.execute("""CREATE TABLE IF NOT EXISTS Passwords(
     id integer PRIMARY KEY,
-    userid integer NOT NULL,
+    userid text NOT NULL,
     password text NOT NULL); """)
 
 window = Tk()
@@ -44,7 +68,6 @@ change_btn = Button(text="Change a password", command="",  borderwidth=5)
 change_btn.place(x=50, y=75, width=120, height=25)
 display_btn = Button(text="Display all User IDs", command="",  borderwidth=5)
 display_btn.place(x=50, y=125, width=120, height=25)
-
-
 window.mainloop()
+db.commit()
 
