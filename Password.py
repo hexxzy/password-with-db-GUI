@@ -1,15 +1,16 @@
 import sqlite3
 from tkinter import *
 import re
-def UserID():                                                                   #допилить кнопку выхода из меню ошибки
+def UserID():
+    global error_window
+    error_window = Toplevel(create_window)
+    error_window.title("Ошибка")
+    error_window.geometry("250x200")                                                                   #допилить кнопку выхода из меню ошибки
     id = id_ent.get()
     password = pass_ent.get()
     cursor.execute("""SELECT userid FROM Passwords WHERE userid=?""", (id,))
     result = cursor.fetchone()
     if result:
-        error_window = Toplevel(create_window)
-        error_window.title("Ошибка")
-        error_window.geometry("250x200")
         err_msg = Label(error_window ,text="Такой ID уже существует")
         err_msg.place(x=20, y=50, width=200, height=25)
         error_window["bg"] = "gray"
@@ -18,14 +19,17 @@ def UserID():                                                                   
         err_msg1.place(x=20, y=75, width=200, height=25)
         err_msg1["relief"] = "raised"
     else:
-        cursor.execute("""INSERT INTO Passwords(userid, password)VALUES(?, ?)""", (id, password))
         if len(password) < 8:
-            print("меньше 8 символов")                                              #доделать логику обработки пароля(выдавать ошибку, не записывать в бд)
+            len_msg = Label(error_window, text="Ваш пароль слишком короткий")
+            len_msg.place(error_window, x=20, y=50)
         elif re.search("[0-9]", password) is None:
-            print("нет числа")
+            digit_msg = Label(error_window, text="В вашем пароль нет цифр")
+            digit_msg.place(error_window, x=20, y=30)
         elif re.search("[A-Z]", password) is None:
-            print("нет заглавной")
-
+            upper_msg = Label(text="В вашем пароле нет заглавной буквы")
+            upper_msg.place(error_window, x=20, y=70)
+        else:
+            cursor.execute("""INSERT INTO Passwords(userid, password)VALUES(?, ?)""", (id, password))
     db.commit()
 
 def Create():
